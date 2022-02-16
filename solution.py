@@ -1,8 +1,9 @@
 # import socket module
+# Lab 2
 from socket import *
 # In order to terminate the program
 import sys
-
+import fileinput
 # port 13331
 def webServer(port=13331):
     serverSocket = socket(AF_INET, SOCK_STREAM)
@@ -10,56 +11,47 @@ def webServer(port=13331):
     serverSocket.bind(("", port))
     # Fill in start
     serverSocket.listen(1)
-
-    print('web server is up and running on port', port)
     # Fill in end
-
+    print('web server is up and running on port', port)
+    # Fill in line
     while True:
         # Establish the connection
         print('Ready to serve...')
-        connectionSocket, addr =  serverSocket.accept()  # Fill in start      #Fill in end
-     try:
+        connectionSocket, addr = serverSocket.accept()  # Fill in start      #Fill in end
         try:
-
-                message = connectionSocket.recv(1024) # Fill in start    #Fill in end
-                #print(message,'::',message.split()[0],':',message.split()[1])
+            try:
+                message = connectionSocket.recv(1024) # get 1024 bytes
                 filename = message.split()[1]
                 f = open(filename[1:])
-                outputdata = f.read() # Fill in start     #Fill in end
-                # Send one HTTP header line into socket.
-                # Fill in start
-                #print(outputdata)
-                # one http header line into socket
-                response = 'HTTP/1.0 200 OK\n\n'
-                connectionSocket.send(response.encode())
-               #connectionSocket.send(outputdata.encode())
-                # Fill in end
-
-                # Send the content of the requested file to the client
-                for i in range(0, len(outputdata)):
-                    connectionSocket.send(outputdata[i].encode())
-
-                connectionSocket.send("\r\n".encode())
+                resp1 = 'HTTP/1.0 200 OK\n\n'
+                connectionSocket.send(resp1.encode())
+                # ------------File Op start--------------------------
+                for i in fileinput.input([filename[1:]]):
+                    print(i)
+                    connectionSocket.send(i.encode())
+                # -------------File Op end-----------------------
                 connectionSocket.close()
-        except IOError:
-                # Send response message for file not found (404)
-        # Fill in start
-                 print("404 Error Code - Not Found")
-                 tespvar = 'HTTP/1.1 404 Not Found'
-                 connectionSocket.send(tespvar.encode())
-        # Fill in end
-
-        # Close client socket
-        # Fill in start
-
-        # Fill in end
-
-    except (ConnectionResetError, BrokenPipeError):
-            pass
-
+                # Fill in end
+            except IOError:
+                print("Can't find file")
+                # response = 'HTTP/1.0 404 \n\nFile not found'
+                # connectionSocket.send(response.encode())
+                # connectionSocket.close()
+                # pass
+                # test -> not found
+            # Send response message for file not found (404)
+            # Fill in start
+                resp2 = 'HTTP/1.0 404\n\nNot Found'
+                connectionSocket.send(resp2.encode())
+            # Fill in end
+            # Close client socket
+            # Fill in start
+                connectionSocket.close()
+            # Fill in end
+        except(ConnectionResetError, BrokenPipeError):
+           pass
     serverSocket.close()
     sys.exit()  # Terminate the program after sending the corresponding data
-
 
 if __name__ == "__main__":
     webServer(13331)
